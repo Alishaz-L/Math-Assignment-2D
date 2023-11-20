@@ -11,8 +11,14 @@ public class POWERUP : MonoBehaviour
     {
         TRANSLATE = 0,
         ROTATE,
-        SCALE
+        SCALE,
+        REVERSESPEED
     }
+
+    bool gummyBearSwitchOn = false;
+
+    [SerializeField]
+    public GameObject cookieObject;
 
     // new state variable for rotation
     bool isRotating = false;
@@ -104,6 +110,11 @@ public class POWERUP : MonoBehaviour
                 case PowerupType.SCALE:
                     ScalePower(p);
                     break;
+                case PowerupType.REVERSESPEED:
+                    ReverseSpeedPower(p);
+                    break;
+
+
             }
         }
     }
@@ -165,6 +176,29 @@ public class POWERUP : MonoBehaviour
         }
     }
 
+    void ReverseSpeedPower(POWERUP p)
+    {
+        // Toggle the state of the GummyBear switch on collision with the player
+        gummyBearSwitchOn = !gummyBearSwitchOn;
+
+        // Use the reference to the CookieObject to toggle its speed and apply momentum
+        if (cookieObject != null)
+        {
+            CookieObject cookieScript = cookieObject.GetComponent<CookieObject>();
+
+            if (gummyBearSwitchOn)
+            {
+                cookieScript.ToggleSpeed(-2.5f);
+                // Apply momentum to the CookieObject by adding an initial force in the opposite direction
+                cookieObject.GetComponent<Rigidbody2D>().AddForce(new Vector2(2.5f, 0f), ForceMode2D.Impulse);
+            }
+            else
+            {
+                cookieScript.ToggleSpeed(2.5f);
+            }
+        }
+    }
+
 
 
 
@@ -183,7 +217,7 @@ public class POWERUP : MonoBehaviour
     {
         if (collision.gameObject.name == "Player")
         {
-            
+
             // player triggered this
             isON = !isON;
 
@@ -195,7 +229,7 @@ public class POWERUP : MonoBehaviour
 
             // make a small thumbnail here and add as a child to the player
             // make a clone of ourselves
-            var obj = Instantiate(this, Position );
+            var obj = Instantiate(this, Position);
 
             // change the name of the object, you may wish to use something different 
             // to denote the different powerups 
@@ -209,13 +243,14 @@ public class POWERUP : MonoBehaviour
             // how many children are already attached to the player?
             // you may wish to use a specific powerup name to see how many powerups are already applied
             // hint: think of only having 1 type of powerup shown, maybe you need to do something here or before
-            int numChildren = FindChildrenWithName(childname,Human).Count;
+            int numChildren = FindChildrenWithName(childname, Human).Count;
 
             // set the position of the child based on how many already exist
             obj.transform.localPosition = offset * numChildren;
 
             // set the scale to be small
             obj.transform.localScale /= 5f;
+
 
         }
         else if (collision.gameObject.name == "ShortBuilding")
@@ -227,6 +262,7 @@ public class POWERUP : MonoBehaviour
             Vector3 bounceDirection = -transform.right; // Use -transform.right for the opposite direction
             transform.Translate(bounceDirection * Speed * Time.fixedDeltaTime);
         }
+        
     }
 }
 
