@@ -12,8 +12,12 @@ public class POWERUP : MonoBehaviour
         TRANSLATE = 0,
         ROTATE,
         SCALE,
-        REVERSESPEED
+        REVERSESPEED,
+        REVERSEROTATE,
+        SHOOT
     }
+
+    private int collisionCount = 0;
 
     bool gummyBearSwitchOn = false;
 
@@ -22,6 +26,7 @@ public class POWERUP : MonoBehaviour
 
     // new state variable for rotation
     bool isRotating = false;
+    bool OppsiteRotation = false;
 
     // new state variable for scaling
     bool isScaling = false;
@@ -113,6 +118,10 @@ public class POWERUP : MonoBehaviour
                 case PowerupType.REVERSESPEED:
                     ReverseSpeedPower(p);
                     break;
+                case PowerupType.REVERSEROTATE:
+                    break;
+                case PowerupType.SHOOT:
+                    break;
 
 
             }
@@ -140,6 +149,11 @@ public class POWERUP : MonoBehaviour
             {
                 // Rotate the object clockwise
                 p.transform.Rotate(Vector3.forward * p.Speed * Time.fixedDeltaTime);
+            }
+            if (OppsiteRotation)
+            {
+                p.transform.Rotate(-Vector3.forward * p.Speed * Time.fixedDeltaTime);
+                collisionCount = 0;
             }
         }
     }
@@ -190,7 +204,7 @@ public class POWERUP : MonoBehaviour
             {
                 cookieScript.ToggleSpeed(-2.5f);
                 // Apply momentum to the CookieObject by adding an initial force in the opposite direction
-                cookieObject.GetComponent<Rigidbody2D>().AddForce(new Vector2(2.5f, 0f), ForceMode2D.Impulse);
+                cookieObject.GetComponent<Rigidbody2D>().AddForce(new Vector2(-2.5f, 0f), ForceMode2D.Impulse);
             }
             else
             {
@@ -251,7 +265,24 @@ public class POWERUP : MonoBehaviour
             // set the scale to be small
             obj.transform.localScale /= 5f;
 
+            // Increment the collision count
+            collisionCount++;
 
+            // Check the collision count and toggle rotation accordingly
+            switch (collisionCount % 3)
+            {
+                case 1:  // First collision, start rotating in one direction
+                    isRotating = true;
+                    break;
+
+                case 2:  // Second collision, start rotating in the opposite direction
+                    OppsiteRotation = true;
+                    break;
+
+                case 0:  // Third collision, stop rotating
+                    isRotating = false;                 
+                    break;
+            }
         }
         else if (collision.gameObject.name == "ShortBuilding")
         {
@@ -262,7 +293,17 @@ public class POWERUP : MonoBehaviour
             Vector3 bounceDirection = -transform.right; // Use -transform.right for the opposite direction
             transform.Translate(bounceDirection * Speed * Time.fixedDeltaTime);
         }
-        
+        else if (collision.gameObject.name == "GummyBear")
+        {
+            // Change the speed to the negative speed of the "Cookie" game object
+            GameObject cookieObject = GameObject.Find("Cookie"); // Assuming the Cookie object has this name
+            POWERUP cookiePowerUp = cookieObject.GetComponent<POWERUP>();
+
+            if (cookiePowerUp != null)
+            {
+                Speed = -cookiePowerUp.Speed;
+            }
+
+        }
     }
 }
-
